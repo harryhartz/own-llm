@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claude Chat</title>
+    <title>Enhanced Claude Chat</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
         
         * {
             margin: 0;
@@ -22,6 +22,8 @@
             --text-secondary: #D4D4D8;
             --text-muted: #A1A1AA;
             --border-color: #404040;
+            --code-bg: #1E1E1E;
+            --success-color: #10B981;
         }
 
         body {
@@ -58,7 +60,12 @@
             font-weight: 700;
         }
 
-        .clear-button {
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-button {
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 8px;
@@ -70,7 +77,7 @@
             transition: all 0.2s ease;
         }
 
-        .clear-button:hover {
+        .header-button:hover {
             background: rgba(255, 255, 255, 0.3);
         }
 
@@ -138,7 +145,7 @@
             white-space: pre-wrap;
             word-wrap: break-word;
             overflow-wrap: break-word;
-            font-family: 'Inter', monospace;
+            font-family: 'Inter', sans-serif;
         }
 
         .claude-message .message-content {
@@ -160,6 +167,62 @@
             font-weight: 500;
             line-height: 1.5;
             box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+        }
+
+        /* Code block styling */
+        .code-block {
+            position: relative;
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+
+        .code-header {
+            background: var(--bg-tertiary);
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .code-language {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .copy-button {
+            background: var(--claude-orange);
+            border: none;
+            border-radius: 6px;
+            padding: 4px 8px;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-button:hover {
+            background: #F59E0B;
+        }
+
+        .copy-button.copied {
+            background: var(--success-color);
+        }
+
+        .code-content {
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text-primary);
+            overflow-x: auto;
+            white-space: pre;
         }
 
         .typing-indicator {
@@ -299,6 +362,23 @@
             line-height: 1.5;
         }
 
+        .continue-button {
+            background: rgba(217, 119, 6, 0.1);
+            border: 1px solid rgba(217, 119, 6, 0.3);
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: var(--claude-orange);
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .continue-button:hover {
+            background: rgba(217, 119, 6, 0.2);
+        }
+
         @media (max-width: 768px) {
             .chat-messages { padding: 15px; }
             .chat-input-container { padding: 15px; }
@@ -310,14 +390,17 @@
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            <h1>Claude Sonnet 4</h1>
-            <button class="clear-button" onclick="clearChat()">Clear</button>
+            <h1>Enhanced Claude Chat</h1>
+            <div class="header-buttons">
+                <button class="header-button" onclick="toggleLongMode()">Long Mode: OFF</button>
+                <button class="header-button" onclick="clearChat()">Clear</button>
+            </div>
         </div>
         
         <div class="chat-messages" id="chatMessages">
             <div class="welcome-message">
-                <h2>Welcome to Claude!</h2>
-                <p>Ready to help with questions, analysis, and creative projects. What can I do for you?</p>
+                <h2>Welcome to Enhanced Claude!</h2>
+                <p>Now with code block support and extended responses. Toggle "Long Mode" for handling very long code outputs.</p>
             </div>
         </div>
         
@@ -354,26 +437,178 @@
     <script src="https://js.puter.com/v2/"></script>
     <script>
         let isLoading = false;
+        let longMode = false;
+        let conversationHistory = [];
+        let currentMessageId = null;
 
-        function addMessage(content, isUser = false) {
+        function toggleLongMode() {
+            longMode = !longMode;
+            const button = document.querySelector('.header-button');
+            button.textContent = `Long Mode: ${longMode ? 'ON' : 'OFF'}`;
+            button.style.background = longMode ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.2)';
+        }
+
+        function detectCodeBlocks(text) {
+            // Enhanced code block detection
+            const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
+            const inlineCodeRegex = /`([^`]+)`/g;
+            
+            let processedText = text;
+            let match;
+            
+            // Process code blocks
+            while ((match = codeBlockRegex.exec(text)) !== null) {
+                const language = match[1] || 'text';
+                const code = match[2].trim();
+                const codeId = 'code_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                
+                const codeBlock = `<div class="code-block">
+                    <div class="code-header">
+                        <span class="code-language">${language}</span>
+                        <button class="copy-button" onclick="copyCode('${codeId}')">Copy</button>
+                    </div>
+                    <div class="code-content" id="${codeId}">${escapeHtml(code)}</div>
+                </div>`;
+                
+                processedText = processedText.replace(match[0], codeBlock);
+            }
+            
+            // Reset regex lastIndex
+            codeBlockRegex.lastIndex = 0;
+            
+            // Process inline code
+            processedText = processedText.replace(inlineCodeRegex, '<code style="background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-family: \'JetBrains Mono\', monospace; font-size: 0.9em;">$1</code>');
+            
+            return processedText;
+        }
+
+        function copyCode(codeId) {
+            const codeElement = document.getElementById(codeId);
+            const button = codeElement.parentElement.querySelector('.copy-button');
+            
+            navigator.clipboard.writeText(codeElement.textContent).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy code:', err);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = codeElement.textContent;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                button.textContent = 'Copied!';
+                setTimeout(() => button.textContent = 'Copy', 2000);
+            });
+        }
+
+        function addMessage(content, isUser = false, messageId = null) {
             const chatMessages = document.getElementById('chatMessages');
             const welcomeMessage = chatMessages.querySelector('.welcome-message');
             if (welcomeMessage) welcomeMessage.remove();
 
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user-message' : 'claude-message'}`;
+            if (messageId) messageDiv.id = messageId;
             
-            // Escape HTML content and preserve line breaks
-            const escapedContent = escapeHtml(content).replace(/\n/g, '<br>');
+            let processedContent;
+            if (isUser) {
+                processedContent = escapeHtml(content).replace(/\n/g, '<br>');
+            } else {
+                processedContent = detectCodeBlocks(content);
+                processedContent = processedContent.replace(/\n/g, '<br>');
+            }
             
             messageDiv.innerHTML = `
                 <div class="message-bubble">
                     <div class="message-label">${isUser ? 'You' : 'Claude'}</div>
-                    <div class="message-content">${escapedContent}</div>
+                    <div class="message-content">${processedContent}</div>
                 </div>
             `;
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            return messageDiv;
+        }
+
+        function updateMessage(messageId, content) {
+            const messageDiv = document.getElementById(messageId);
+            if (messageDiv) {
+                const contentDiv = messageDiv.querySelector('.message-content');
+                let processedContent = detectCodeBlocks(content);
+                processedContent = processedContent.replace(/\n/g, '<br>');
+                contentDiv.innerHTML = processedContent;
+                
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        function addContinueButton(messageId) {
+            const messageDiv = document.getElementById(messageId);
+            if (messageDiv) {
+                const contentDiv = messageDiv.querySelector('.message-content');
+                const continueButton = document.createElement('button');
+                continueButton.className = 'continue-button';
+                continueButton.textContent = 'Continue Response';
+                continueButton.onclick = () => continueResponse(messageId);
+                contentDiv.appendChild(continueButton);
+            }
+        }
+
+        async function continueResponse(messageId) {
+            const button = document.querySelector(`#${messageId} .continue-button`);
+            if (button) button.remove();
+            
+            isLoading = true;
+            document.getElementById('sendButton').disabled = true;
+            showTypingIndicator();
+            
+            try {
+                const chat_resp = await puter.ai.chat('Please continue from where you left off.', {
+                    model: 'claude-sonnet-4',
+                    stream: true,
+                    max_tokens: longMode ? 8000 : 4000,
+                    temperature: 0.7,
+                    context: conversationHistory
+                });
+                
+                hideTypingIndicator();
+                
+                let fullResponse = '';
+                const messageDiv = document.getElementById(messageId);
+                const contentDiv = messageDiv.querySelector('.message-content');
+                const currentContent = contentDiv.textContent;
+                
+                for await (const part of chat_resp) {
+                    if (part?.text) {
+                        fullResponse += part.text;
+                        updateMessage(messageId, currentContent + fullResponse);
+                    }
+                }
+                
+                // Update conversation history
+                const lastEntry = conversationHistory[conversationHistory.length - 1];
+                if (lastEntry && lastEntry.role === 'assistant') {
+                    lastEntry.content += fullResponse;
+                }
+                
+            } catch (error) {
+                hideTypingIndicator();
+                showError(error.message || 'Failed to continue response.');
+                console.error('Continue error:', error);
+            } finally {
+                isLoading = false;
+                document.getElementById('sendButton').disabled = false;
+            }
         }
 
         function escapeHtml(text) {
@@ -412,6 +647,9 @@
             
             if (!message || isLoading) return;
             
+            // Add to conversation history
+            conversationHistory.push({ role: 'user', content: message });
+            
             addMessage(message, true);
             input.value = '';
             input.style.height = 'auto';
@@ -421,40 +659,36 @@
             showTypingIndicator();
             
             try {
-                const chatMessages = document.getElementById('chatMessages');
-                const responseDiv = document.createElement('div');
-                responseDiv.className = 'message claude-message';
-                responseDiv.innerHTML = `
-                    <div class="message-bubble">
-                        <div class="message-label">Claude</div>
-                        <div class="message-content" id="currentResponse"></div>
-                    </div>
-                `;
+                // Generate unique message ID
+                currentMessageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 
-                hideTypingIndicator();
-                chatMessages.appendChild(responseDiv);
-                
-                const currentResponse = document.getElementById('currentResponse');
-                let fullResponse = '';
-                
-                // Enhanced API call with longer context support
                 const chat_resp = await puter.ai.chat(message, {
                     model: 'claude-sonnet-4',
                     stream: true,
-                    max_tokens: 4000, // Allow longer responses
-                    temperature: 0.7
+                    max_tokens: longMode ? 8000 : 4000,
+                    temperature: 0.7,
+                    context: conversationHistory.slice(-10) // Keep last 10 messages for context
                 });
+                
+                hideTypingIndicator();
+                addMessage('', false, currentMessageId);
+                
+                let fullResponse = '';
                 
                 for await (const part of chat_resp) {
                     if (part?.text) {
                         fullResponse += part.text;
-                        // Escape HTML and preserve formatting
-                        currentResponse.innerHTML = escapeHtml(fullResponse).replace(/\n/g, '<br>');
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                        updateMessage(currentMessageId, fullResponse);
                     }
                 }
                 
-                currentResponse.removeAttribute('id');
+                // Add to conversation history
+                conversationHistory.push({ role: 'assistant', content: fullResponse });
+                
+                // If response seems truncated and long mode is on, add continue button
+                if (longMode && (fullResponse.length > 3000 || fullResponse.endsWith('...'))) {
+                    addContinueButton(currentMessageId);
+                }
                 
             } catch (error) {
                 hideTypingIndicator();
@@ -475,10 +709,11 @@
         }
 
         function clearChat() {
+            conversationHistory = [];
             document.getElementById('chatMessages').innerHTML = `
                 <div class="welcome-message">
-                    <h2>Welcome to Claude!</h2>
-                    <p>Ready to help with questions, analysis, and creative projects. What can I do for you?</p>
+                    <h2>Welcome to Enhanced Claude!</h2>
+                    <p>Now with code block support and extended responses. Toggle "Long Mode" for handling very long code outputs.</p>
                 </div>
             `;
         }
