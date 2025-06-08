@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claude Chat - Enhanced</title>
+    <title>Claude Chat - Enhanced (Fixed)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
         
@@ -119,6 +119,16 @@
             transform: translateY(-1px);
         }
 
+        .debug-panel {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 11px;
+            color: #FCA5A5;
+            max-width: 200px;
+        }
+
         .chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -220,7 +230,6 @@
             box-shadow: 0 4px 16px rgba(217, 119, 6, 0.4);
         }
 
-        /* Enhanced code block styling */
         .code-block {
             background: var(--bg-code);
             border: 1px solid var(--border-light);
@@ -272,45 +281,6 @@
             overflow-x: auto;
             max-height: 500px;
             overflow-y: auto;
-        }
-
-        .code-content::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        .code-content::-webkit-scrollbar-thumb {
-            background: var(--claude-orange);
-            border-radius: 3px;
-        }
-
-        /* Long response handling */
-        .long-response {
-            max-height: 70vh;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-        }
-
-        .long-response::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .long-response::-webkit-scrollbar-thumb {
-            background: var(--claude-orange);
-            border-radius: 4px;
-        }
-
-        .response-stats {
-            position: absolute;
-            top: -8px;
-            right: 16px;
-            background: var(--claude-orange);
-            color: white;
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: 600;
         }
 
         .typing-indicator {
@@ -391,11 +361,6 @@
             font-weight: 500;
         }
 
-        .length-selector:focus {
-            outline: none;
-            border-color: var(--claude-orange);
-        }
-
         .char-counter {
             font-size: 11px;
             color: var(--text-muted);
@@ -426,10 +391,6 @@
             transform: translateY(-2px);
         }
 
-        .chat-input::placeholder {
-            color: var(--text-muted);
-        }
-
         .send-button {
             background: linear-gradient(135deg, var(--claude-orange), var(--claude-orange-light));
             border: none;
@@ -443,8 +404,6 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 16px rgba(217, 119, 6, 0.4);
-            position: relative;
-            overflow: hidden;
         }
 
         .send-button:hover {
@@ -452,30 +411,10 @@
             box-shadow: 0 8px 24px rgba(217, 119, 6, 0.5);
         }
 
-        .send-button:active {
-            transform: translateY(-1px);
-        }
-
         .send-button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
-            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
-        }
-
-        .send-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .send-button:hover::before {
-            left: 100%;
         }
 
         .error-message {
@@ -486,9 +425,6 @@
             border-radius: 12px;
             margin-bottom: 20px;
             font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .welcome-message {
@@ -512,68 +448,11 @@
             margin: 0 auto;
         }
 
-        .loading-progress {
-            width: 100%;
-            height: 3px;
-            background: var(--bg-tertiary);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .loading-bar {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, var(--claude-orange), var(--claude-orange-light));
-            border-radius: 2px;
-            transition: width 0.3s ease;
-        }
-
-        /* Responsive design */
         @media (max-width: 768px) {
-            .chat-messages { 
-                padding: 16px; 
-            }
-            .chat-input-container { 
-                padding: 16px; 
-            }
-            .chat-header { 
-                padding: 12px 16px; 
-            }
-            .message-bubble { 
-                max-width: 95%; 
-                min-width: auto; 
-            }
-            .chat-header h1 {
-                font-size: 18px;
-            }
-            .token-counter {
-                display: none;
-            }
-        }
-
-        /* Dark scrollbar for webkit browsers */
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: var(--claude-orange) var(--bg-tertiary);
-        }
-
-        *::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        *::-webkit-scrollbar-track {
-            background: var(--bg-tertiary);
-        }
-
-        *::-webkit-scrollbar-thumb {
-            background: var(--claude-orange);
-            border-radius: 4px;
-        }
-
-        *::-webkit-scrollbar-thumb:hover {
-            background: var(--claude-orange-light);
+            .chat-messages { padding: 16px; }
+            .chat-input-container { padding: 16px; }
+            .chat-header { padding: 12px 16px; }
+            .message-bubble { max-width: 95%; min-width: auto; }
         }
     </style>
 </head>
@@ -582,30 +461,28 @@
         <div class="chat-header">
             <h1>
                 <div class="status-indicator"></div>
-                Claude Sonnet 4 - Enhanced
+                Claude Chat - Fixed
             </h1>
             <div class="header-controls">
+                <div class="debug-panel" id="debugPanel">Ready</div>
                 <div class="token-counter" id="tokenCounter">Tokens: 0</div>
-                <button class="clear-button" onclick="clearChat()">Clear Chat</button>
+                <button class="clear-button" onclick="clearChat()">Clear</button>
             </div>
         </div>
         
         <div class="chat-messages" id="chatMessages">
             <div class="welcome-message">
-                <h2>Enhanced Claude Interface</h2>
-                <p>Optimized for long-form responses including extensive code generation, detailed analyses, and comprehensive documentation. Ready to handle responses of 1000+ lines with improved formatting and performance.</p>
+                <h2>Fixed Claude Interface</h2>
+                <p>Debug version with proper error handling and response display. Check the debug panel for status updates.</p>
             </div>
         </div>
         
         <div class="typing-indicator" id="typingIndicator">
-            <span>Claude is generating response</span>
+            <span>Claude is thinking...</span>
             <div class="typing-dots">
                 <div class="typing-dot"></div>
                 <div class="typing-dot"></div>
                 <div class="typing-dot"></div>
-            </div>
-            <div class="loading-progress">
-                <div class="loading-bar" id="loadingBar"></div>
             </div>
         </div>
         
@@ -614,23 +491,20 @@
                 <div class="input-container">
                     <div class="input-controls">
                         <select class="length-selector" id="responseLength">
-                            <option value="standard">Standard Response</option>
-                            <option value="detailed">Detailed Response</option>
-                            <option value="comprehensive">Comprehensive Response</option>
-                            <option value="extensive" selected>Extensive Response (1000+ lines)</option>
+                            <option value="standard">Standard</option>
+                            <option value="detailed">Detailed</option>
+                            <option value="comprehensive">Comprehensive</option>
                         </select>
-                        <div class="char-counter" id="charCounter">0 characters</div>
+                        <div class="char-counter" id="charCounter">0 chars</div>
                     </div>
                     <textarea 
                         class="chat-input" 
                         id="chatInput" 
-                        placeholder="Ask for detailed code, comprehensive analysis, or extensive documentation... (Shift+Enter for new line)"
+                        placeholder="Ask Claude anything... (Shift+Enter for new line)"
                         rows="1"
-                        onkeydown="handleKeyPress(event)"
-                        oninput="autoResize(this); updateCharCounter()"
                     ></textarea>
                 </div>
-                <button class="send-button" id="sendButton" onclick="sendMessage()">
+                <button class="send-button" id="sendButton">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M3.4 20.4l17.45-7.48c.81-.35.81-1.49 0-1.84L3.4 3.6c-.66-.29-1.39.2-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.49-.87.99l.01 4.61c0 .71.73 1.2 1.39.91z"/>
                     </svg>
@@ -645,131 +519,26 @@
         let totalTokens = 0;
         let conversationHistory = [];
 
-        const responseLengthConfig = {
-            'standard': { maxTokens: 1000, temperature: 0.7 },
-            'detailed': { maxTokens: 2500, temperature: 0.7 },
-            'comprehensive': { maxTokens: 4000, temperature: 0.6 },
-            'extensive': { maxTokens: 8000, temperature: 0.5 }
-        };
+        // Debug function
+        function updateDebug(message, isError = false) {
+            const debugPanel = document.getElementById('debugPanel');
+            debugPanel.textContent = message;
+            debugPanel.style.color = isError ? '#EF4444' : '#10B981';
+            console.log('Debug:', message);
+        }
 
         function updateCharCounter() {
             const input = document.getElementById('chatInput');
             const counter = document.getElementById('charCounter');
-            const count = input.value.length;
-            counter.textContent = `${count} characters`;
-            
-            if (count > 2000) {
-                counter.style.color = 'var(--warning-color)';
-            } else {
-                counter.style.color = 'var(--text-muted)';
-            }
+            counter.textContent = `${input.value.length} chars`;
         }
 
         function updateTokenCounter() {
-            const counter = document.getElementById('tokenCounter');
-            counter.textContent = `Tokens: ${totalTokens.toLocaleString()}`;
+            document.getElementById('tokenCounter').textContent = `Tokens: ${totalTokens}`;
         }
 
         function estimateTokens(text) {
-            // Rough estimation: 1 token ≈ 0.75 words ≈ 4 characters
             return Math.ceil(text.length / 4);
-        }
-
-        function formatCodeBlocks(text) {
-            // Enhanced code block detection and formatting
-            const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
-            return text.replace(codeBlockRegex, (match, language, code) => {
-                const lang = language || 'text';
-                const lines = code.trim().split('\n').length;
-                const chars = code.trim().length;
-                
-                return `<div class="code-block">
-                    <div class="code-header">
-                        <span class="code-language">${lang.toUpperCase()}</span>
-                        <div style="display: flex; gap: 12px; align-items: center;">
-                            <span>${lines} lines • ${chars} chars</span>
-                            <button class="copy-button" onclick="copyCode(this)">Copy</button>
-                        </div>
-                    </div>
-                    <div class="code-content">${escapeHtml(code.trim())}</div>
-                </div>`;
-            });
-        }
-
-        function copyCode(button) {
-            const codeContent = button.closest('.code-block').querySelector('.code-content');
-            const text = codeContent.textContent;
-            
-            navigator.clipboard.writeText(text).then(() => {
-                const originalText = button.textContent;
-                button.textContent = 'Copied!';
-                button.style.background = 'var(--success-color)';
-                button.style.borderColor = 'var(--success-color)';
-                
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.style.background = 'none';
-                    button.style.borderColor = 'var(--border-color)';
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy code:', err);
-                button.textContent = 'Failed';
-                setTimeout(() => {
-                    button.textContent = 'Copy';
-                }, 2000);
-            });
-        }
-
-        function addMessage(content, isUser = false, tokenCount = 0) {
-            const chatMessages = document.getElementById('chatMessages');
-            const welcomeMessage = chatMessages.querySelector('.welcome-message');
-            if (welcomeMessage) welcomeMessage.remove();
-
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'claude-message'}`;
-            
-            let processedContent = content;
-            let responseStats = '';
-            
-            if (!isUser) {
-                // Process code blocks and other formatting
-                processedContent = formatCodeBlocks(content);
-                
-                // Add response statistics for long responses
-                const lines = content.split('\n').length;
-                const words = content.split(/\s+/).length;
-                const chars = content.length;
-                
-                if (chars > 2000) {
-                    responseStats = `<div class="response-stats">${lines} lines • ${words} words</div>`;
-                }
-                
-                // Add scrollable container for very long responses
-                if (chars > 5000) {
-                    processedContent = `<div class="long-response">${processedContent}</div>`;
-                }
-            } else {
-                processedContent = escapeHtml(content);
-            }
-            
-            processedContent = processedContent.replace(/\n/g, '<br>');
-            
-            messageDiv.innerHTML = `
-                <div class="message-bubble">
-                    ${responseStats}
-                    <div class="message-label">${isUser ? 'You' : 'Claude'}</div>
-                    <div class="message-content">${processedContent}</div>
-                </div>
-            `;
-            
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            // Update token counter
-            if (tokenCount > 0) {
-                totalTokens += tokenCount;
-                updateTokenCounter();
-            }
         }
 
         function escapeHtml(text) {
@@ -778,66 +547,83 @@
             return div.innerHTML;
         }
 
+        function formatCodeBlocks(text) {
+            const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
+            return text.replace(codeBlockRegex, (match, language, code) => {
+                const lang = language || 'text';
+                const lines = code.trim().split('\n').length;
+                
+                return `<div class="code-block">
+                    <div class="code-header">
+                        <span class="code-language">${lang.toUpperCase()}</span>
+                        <span>${lines} lines</span>
+                    </div>
+                    <div class="code-content">${escapeHtml(code.trim())}</div>
+                </div>`;
+            });
+        }
+
+        function addMessage(content, isUser = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const welcomeMessage = chatMessages.querySelector('.welcome-message');
+            if (welcomeMessage) welcomeMessage.remove();
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'claude-message'}`;
+            
+            let processedContent = content;
+            if (!isUser) {
+                processedContent = formatCodeBlocks(content);
+            } else {
+                processedContent = escapeHtml(content);
+            }
+            
+            // Convert newlines to <br> tags
+            processedContent = processedContent.replace(/\n/g, '<br>');
+            
+            messageDiv.innerHTML = `
+                <div class="message-bubble">
+                    <div class="message-label">${isUser ? 'You' : 'Claude'}</div>
+                    <div class="message-content">${processedContent}</div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            if (!isUser) {
+                const tokens = estimateTokens(content);
+                totalTokens += tokens;
+                updateTokenCounter();
+            }
+        }
+
         function showTypingIndicator() {
-            const indicator = document.getElementById('typingIndicator');
-            const loadingBar = document.getElementById('loadingBar');
-            indicator.style.display = 'flex';
-            
-            // Simulate loading progress
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += Math.random() * 15;
-                if (progress > 90) progress = 90;
-                loadingBar.style.width = progress + '%';
-            }, 500);
-            
-            indicator.progressInterval = interval;
+            document.getElementById('typingIndicator').style.display = 'flex';
             document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
         }
 
         function hideTypingIndicator() {
-            const indicator = document.getElementById('typingIndicator');
-            const loadingBar = document.getElementById('loadingBar');
-            
-            if (indicator.progressInterval) {
-                clearInterval(indicator.progressInterval);
-            }
-            
-            loadingBar.style.width = '100%';
-            setTimeout(() => {
-                indicator.style.display = 'none';
-                loadingBar.style.width = '0%';
-            }, 300);
+            document.getElementById('typingIndicator').style.display = 'none';
         }
 
         function showError(message) {
             const chatMessages = document.getElementById('chatMessages');
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
-            errorDiv.innerHTML = `
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                </svg>
-                <strong>Error:</strong> ${message}
-            `;
+            errorDiv.innerHTML = `<strong>Error:</strong> ${message}`;
             chatMessages.appendChild(errorDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        function autoResize(textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = Math.min(textarea.scrollHeight, 300) + 'px';
-        }
-
-        function buildEnhancedPrompt(message, responseLength) {
-            const lengthInstructions = {
+        function buildPrompt(message, responseLength) {
+            const instructions = {
                 'standard': '',
-                'detailed': 'Please provide a detailed and comprehensive response.',
-                'comprehensive': 'Please provide a very comprehensive and thorough response with extensive detail, examples, and explanations.',
-                'extensive': 'Please provide an extremely detailed, comprehensive response. Include extensive code examples, detailed explanations, multiple approaches, best practices, and thorough documentation. Aim for a response that could be 1000+ lines if it involves code generation or detailed technical content.'
+                'detailed': 'Please provide a detailed response with examples.',
+                'comprehensive': 'Please provide a comprehensive response with extensive detail, examples, and thorough explanations.'
             };
-
-            const instruction = lengthInstructions[responseLength];
+            
+            const instruction = instructions[responseLength];
             return instruction ? `${instruction}\n\n${message}` : message;
         }
 
@@ -849,94 +635,90 @@
             
             if (!message || isLoading) return;
             
-            const enhancedMessage = buildEnhancedPrompt(message, responseLength);
-            const estimatedInputTokens = estimateTokens(message);
+            updateDebug('Sending message...');
             
-            addMessage(message, true, estimatedInputTokens);
+            // Add user message
+            addMessage(message, true);
+            const enhancedMessage = buildPrompt(message, responseLength);
             conversationHistory.push({ role: 'user', content: message });
             
+            // Clear input
             input.value = '';
             input.style.height = 'auto';
             updateCharCounter();
             
+            // Set loading state
             isLoading = true;
             sendButton.disabled = true;
             showTypingIndicator();
             
             try {
-                const chatMessages = document.getElementById('chatMessages');
-                const responseDiv = document.createElement('div');
-                responseDiv.className = 'message claude-message';
+                updateDebug('Calling Claude API...');
                 
-                hideTypingIndicator();
-                chatMessages.appendChild(responseDiv);
+                // Check if puter.ai is available
+                if (!window.puter || !window.puter.ai) {
+                    throw new Error('Puter AI is not available. Please check the Puter script loading.');
+                }
                 
                 let fullResponse = '';
-                let isFirstChunk = true;
+                let responseStarted = false;
                 
-                const config = responseLengthConfig[responseLength];
-                
-                // Enhanced API call with conversation history and extended limits
+                // Make API call with proper error handling
                 const chat_resp = await puter.ai.chat(enhancedMessage, {
-                    model: 'claude-sonnet-4',
+                    model: 'claude-3-5-sonnet-20241022',
                     stream: true,
-                    max_tokens: config.maxTokens,
-                    temperature: config.temperature,
-                    conversation_history: conversationHistory.slice(-10) // Keep last 10 exchanges
+                    max_tokens: responseLength === 'comprehensive' ? 4000 : 
+                                responseLength === 'detailed' ? 2000 : 1000,
+                    temperature: 0.7
                 });
                 
+                updateDebug('Receiving response...');
+                hideTypingIndicator();
+                
+                // Process streaming response
                 for await (const part of chat_resp) {
                     if (part?.text) {
                         fullResponse += part.text;
                         
-                        if (isFirstChunk) {
+                        if (!responseStarted) {
+                            // Add the initial message container
+                            const chatMessages = document.getElementById('chatMessages');
+                            const responseDiv = document.createElement('div');
+                            responseDiv.className = 'message claude-message';
                             responseDiv.innerHTML = `
                                 <div class="message-bubble">
                                     <div class="message-label">Claude</div>
-                                    <div class="message-content" id="currentResponse"></div>
+                                    <div class="message-content" id="streaming-response"></div>
                                 </div>
                             `;
-                            isFirstChunk = false;
+                            chatMessages.appendChild(responseDiv);
+                            responseStarted = true;
                         }
                         
-                        const currentResponse = document.getElementById('currentResponse');
-                        if (currentResponse) {
-                            // Process and display the response with enhanced formatting
+                        // Update the streaming response
+                        const streamingElement = document.getElementById('streaming-response');
+                        if (streamingElement) {
                             let processedResponse = formatCodeBlocks(fullResponse);
                             processedResponse = processedResponse.replace(/\n/g, '<br>');
-                            currentResponse.innerHTML = processedResponse;
-                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                            streamingElement.innerHTML = processedResponse;
+                            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
                         }
                     }
                 }
                 
-                // Finalize the response
-                const finalResponse = document.getElementById('currentResponse');
-                if (finalResponse) {
-                    finalResponse.removeAttribute('id');
-                    
-                    // Add response statistics for long responses
-                    const lines = fullResponse.split('\n').length;
-                    const words = fullResponse.split(/\s+/).length;
-                    const chars = fullResponse.length;
-                    const estimatedTokens = estimateTokens(fullResponse);
-                    
-                    if (chars > 2000) {
-                        const statsDiv = document.createElement('div');
-                        statsDiv.className = 'response-stats';
-                        statsDiv.textContent = `${lines} lines • ${words} words • ~${estimatedTokens} tokens`;
-                        responseDiv.querySelector('.message-bubble').appendChild(statsDiv);
-                    }
-                    
-                    // Add to conversation history
-                    conversationHistory.push({ role: 'assistant', content: fullResponse });
-                    totalTokens += estimatedTokens;
-                    updateTokenCounter();
+                // Finalize response
+                const streamingElement = document.getElementById('streaming-response');
+                if (streamingElement) {
+                    streamingElement.removeAttribute('id');
                 }
+                
+                conversationHistory.push({ role: 'assistant', content: fullResponse });
+                updateDebug(`Response complete (${fullResponse.length} chars)`);
                 
             } catch (error) {
                 hideTypingIndicator();
-                showError(error.message || 'Failed to send message. Please try again.');
+                updateDebug(`Error: ${error.message}`, true);
+                showError(error.message || 'Failed to get response from Claude');
                 console.error('Chat error:', error);
             } finally {
                 isLoading = false;
@@ -945,11 +727,18 @@
             }
         }
 
-        function handleKeyPress(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
+        function clearChat() {
+            conversationHistory = [];
+            totalTokens = 0;
+            updateTokenCounter();
+            updateDebug('Chat cleared');
+            
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="welcome-message">
+                    <h2>Fixed Claude Interface</h2>
+                    <p>Debug version with proper error handling and response display. Check the debug panel for status updates.</p>
+                </div>
+            `;
         }
 
         function autoResize(textarea) {
@@ -957,124 +746,46 @@
             textarea.style.height = Math.min(textarea.scrollHeight, 300) + 'px';
         }
 
-        function clearChat() {
-            conversationHistory = [];
-            totalTokens = 0;
-            updateTokenCounter();
-            
-            document.getElementById('chatMessages').innerHTML = `
-                <div class="welcome-message">
-                    <h2>Enhanced Claude Interface</h2>
-                    <p>Optimized for long-form responses including extensive code generation, detailed analyses, and comprehensive documentation. Ready to handle responses of 1000+ lines with improved formatting and performance.</p>
-                </div>
-            `;
-        }
-
-        // Initialize the application
-        window.addEventListener('load', () => {
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
             const input = document.getElementById('chatInput');
-            input.focus();
-            updateCharCounter();
-            updateTokenCounter();
+            const sendButton = document.getElementById('sendButton');
             
-            // Add event listeners
+            // Input event listeners
             input.addEventListener('input', function() {
                 autoResize(this);
                 updateCharCounter();
             });
             
-            // Add keyboard shortcuts
-            document.addEventListener('keydown', (e) => {
-                if (e.ctrlKey || e.metaKey) {
-                    switch(e.key) {
-                        case 'k':
-                            e.preventDefault();
-                            clearChat();
-                            break;
-                        case 'l':
-                            e.preventDefault();
-                            input.focus();
-                            break;
-                    }
+            input.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    sendMessage();
                 }
             });
             
-            // Add response length change handler
-            document.getElementById('responseLength').addEventListener('change', function() {
-                const descriptions = {
-                    'standard': 'Standard responses for quick questions',
-                    'detailed': 'Detailed responses with more context',
-                    'comprehensive': 'Comprehensive responses with extensive detail',
-                    'extensive': 'Extensive responses optimized for code generation and detailed analysis'
-                };
-                
-                const placeholder = `Ask for ${this.value} content - ${descriptions[this.value]}... (Shift+Enter for new line)`;
-                input.placeholder = placeholder;
-            });
+            // Send button click
+            sendButton.addEventListener('click', sendMessage);
             
-            // Trigger initial placeholder update
-            document.getElementById('responseLength').dispatchEvent(new Event('change'));
-        });
-
-        // Add utility functions for enhanced features
-        function downloadResponse(content, filename = 'claude_response.txt') {
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function exportChat() {
-            const messages = document.querySelectorAll('.message');
-            let chatText = 'Claude Chat Export\n';
-            chatText += '='.repeat(50) + '\n\n';
+            // Initialize
+            input.focus();
+            updateCharCounter();
+            updateTokenCounter();
+            updateDebug('Interface ready');
             
-            messages.forEach(message => {
-                const isUser = message.classList.contains('user-message');
-                const content = message.querySelector('.message-content').textContent;
-                chatText += `${isUser ? 'User' : 'Claude'}:\n${content}\n\n`;
-                chatText += '-'.repeat(30) + '\n\n';
-            });
-            
-            downloadResponse(chatText, 'claude_chat_export.txt');
-        }
-
-        // Add context menu for enhanced features
-        document.addEventListener('contextmenu', (e) => {
-            if (e.target.closest('.message-content') && !e.target.closest('.user-message')) {
-                e.preventDefault();
-                const content = e.target.closest('.message-content').textContent;
-                
-                const menu = document.createElement('div');
-                menu.style.cssText = `
-                    position: fixed;
-                    top: ${e.clientY}px;
-                    left: ${e.clientX}px;
-                    background: var(--bg-tertiary);
-                    border: 1px solid var(--border-color);
-                    border-radius: 8px;
-                    padding: 8px 0;
-                    z-index: 1000;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                `;
-                
-                menu.innerHTML = `
-                    <div style="padding: 8px 16px; cursor: pointer; color: var(--text-primary);" onclick="navigator.clipboard.writeText('${content.replace(/'/g, "\\'")}'); this.parentElement.remove();">Copy Response</div>
-                    <div style="padding: 8px 16px; cursor: pointer; color: var(--text-primary);" onclick="downloadResponse('${content.replace(/'/g, "\\'")}'); this.parentElement.remove();">Download Response</div>
-                `;
-                
-                document.body.appendChild(menu);
-                
+            // Check if Puter is loaded
+            if (window.puter && window.puter.ai) {
+                updateDebug('Puter AI loaded successfully');
+            } else {
+                updateDebug('Waiting for Puter AI...', true);
+                // Check again after a delay
                 setTimeout(() => {
-                    document.addEventListener('click', () => {
-                        if (menu.parentElement) menu.remove();
-                    }, { once: true });
-                }, 100);
+                    if (window.puter && window.puter.ai) {
+                        updateDebug('Puter AI loaded successfully');
+                    } else {
+                        updateDebug('Puter AI failed to load', true);
+                    }
+                }, 2000);
             }
         });
     </script>
