@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Claude Chat</title>
+    <title>Claude Chat - Enhanced</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
         
@@ -15,15 +15,24 @@
 
         :root {
             --claude-orange: #D97706;
+            --claude-orange-light: #F59E0B;
             --bg-primary: #0F0F0F;
             --bg-secondary: #1A1A1A;
             --bg-tertiary: #262626;
+            --bg-code: #1E1E1E;
             --text-primary: #FAFAFA;
             --text-secondary: #D4D4D8;
             --text-muted: #A1A1AA;
+            --text-code: #E5E7EB;
             --border-color: #404040;
-            --code-bg: #1E1E1E;
+            --border-light: #525252;
             --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --error-color: #EF4444;
+            --code-keyword: #C678DD;
+            --code-string: #98C379;
+            --code-number: #D19A66;
+            --code-comment: #5C6370;
         }
 
         body {
@@ -38,7 +47,7 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: var(--bg-secondary);
             border-left: 1px solid var(--border-color);
@@ -46,30 +55,58 @@
         }
 
         .chat-header {
-            background: linear-gradient(135deg, var(--claude-orange), #F59E0B);
-            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--claude-orange), var(--claude-orange-light));
+            padding: 16px 24px;
             border-bottom: 2px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .chat-header h1 {
             color: white;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
-        }
-
-        .header-buttons {
             display: flex;
+            align-items: center;
             gap: 8px;
         }
 
-        .header-button {
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .token-counter {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .clear-button {
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 8px;
-            padding: 6px 12px;
+            padding: 8px 16px;
             color: white;
             font-weight: 600;
             font-size: 12px;
@@ -77,36 +114,49 @@
             transition: all 0.2s ease;
         }
 
-        .header-button:hover {
+        .clear-button:hover {
             background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
         }
 
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 24px;
             background: var(--bg-primary);
             scrollbar-width: thin;
             scrollbar-color: var(--claude-orange) transparent;
+            scroll-behavior: smooth;
         }
 
         .chat-messages::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
 
         .chat-messages::-webkit-scrollbar-thumb {
-            background: var(--claude-orange);
-            border-radius: 3px;
+            background: linear-gradient(45deg, var(--claude-orange), var(--claude-orange-light));
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
         }
 
         .message {
-            margin-bottom: 20px;
-            animation: slideIn 0.3s ease-out;
+            margin-bottom: 24px;
+            animation: slideIn 0.4s ease-out;
         }
 
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { 
+                opacity: 0; 
+                transform: translateY(20px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
         }
 
         .user-message {
@@ -120,7 +170,7 @@
         }
 
         .message-bubble {
-            max-width: 80%;
+            max-width: 85%;
             min-width: 200px;
         }
 
@@ -128,8 +178,9 @@
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
-            margin-bottom: 6px;
-            opacity: 0.7;
+            margin-bottom: 8px;
+            opacity: 0.8;
+            letter-spacing: 0.5px;
         }
 
         .user-message .message-label {
@@ -146,39 +197,37 @@
             word-wrap: break-word;
             overflow-wrap: break-word;
             font-family: 'Inter', sans-serif;
-            max-height: none;
-            overflow: visible;
+            line-height: 1.6;
         }
 
         .claude-message .message-content {
             background: var(--bg-tertiary);
             color: var(--text-primary);
-            padding: 16px 20px;
-            border-radius: 18px 18px 18px 6px;
+            padding: 20px 24px;
+            border-radius: 20px 20px 20px 8px;
             font-weight: 500;
-            line-height: 1.6;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            border-left: 3px solid var(--claude-orange);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            border-left: 4px solid var(--claude-orange);
+            position: relative;
         }
 
         .user-message .message-content {
-            background: linear-gradient(135deg, var(--claude-orange), #F59E0B);
+            background: linear-gradient(135deg, var(--claude-orange), var(--claude-orange-light));
             color: white;
-            padding: 16px 20px;
-            border-radius: 18px 18px 6px 18px;
+            padding: 20px 24px;
+            border-radius: 20px 20px 8px 20px;
             font-weight: 500;
-            line-height: 1.5;
-            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+            box-shadow: 0 4px 16px rgba(217, 119, 6, 0.4);
         }
 
-        /* Code block styling */
+        /* Enhanced code block styling */
         .code-block {
-            position: relative;
-            background: var(--code-bg);
-            border: 1px solid var(--border-color);
+            background: var(--bg-code);
+            border: 1px solid var(--border-light);
             border-radius: 12px;
-            margin: 12px 0;
+            margin: 16px 0;
             overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .code-header {
@@ -186,51 +235,107 @@
             padding: 8px 16px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
-            justify-content: flex-start;
+            justify-content: space-between;
             align-items: center;
+            font-size: 12px;
+            color: var(--text-muted);
         }
 
         .code-language {
-            font-size: 12px;
-            color: var(--text-muted);
             font-weight: 600;
-            text-transform: uppercase;
+            color: var(--claude-orange);
+        }
+
+        .copy-button {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s ease;
+        }
+
+        .copy-button:hover {
+            background: var(--claude-orange);
+            color: white;
+            border-color: var(--claude-orange);
         }
 
         .code-content {
-            padding: 16px;
+            padding: 16px 20px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 13px;
             line-height: 1.5;
-            color: var(--text-primary);
+            color: var(--text-code);
             overflow-x: auto;
-            white-space: pre-wrap;
-            word-break: break-all;
-            max-width: 100%;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .code-content::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .code-content::-webkit-scrollbar-thumb {
+            background: var(--claude-orange);
+            border-radius: 3px;
+        }
+
+        /* Long response handling */
+        .long-response {
+            max-height: 70vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .long-response::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .long-response::-webkit-scrollbar-thumb {
+            background: var(--claude-orange);
+            border-radius: 4px;
+        }
+
+        .response-stats {
+            position: absolute;
+            top: -8px;
+            right: 16px;
+            background: var(--claude-orange);
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
         }
 
         .typing-indicator {
             display: none;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             color: var(--claude-orange);
             font-weight: 500;
-            font-size: 13px;
-            margin-bottom: 15px;
-            padding: 12px 16px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            padding: 16px 20px;
             background: rgba(217, 119, 6, 0.1);
-            border-radius: 12px;
-            border: 1px solid rgba(217, 119, 6, 0.2);
+            border-radius: 16px;
+            border: 1px solid rgba(217, 119, 6, 0.3);
+            backdrop-filter: blur(10px);
         }
 
         .typing-dots {
             display: flex;
-            gap: 3px;
+            gap: 4px;
         }
 
         .typing-dot {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
             background: var(--claude-orange);
             border-radius: 50%;
             animation: typing 1.4s infinite ease-in-out;
@@ -241,46 +346,84 @@
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
         @keyframes typing {
-            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-            40% { transform: scale(1.2); opacity: 1; }
+            0%, 80%, 100% { 
+                transform: scale(0.8); 
+                opacity: 0.5; 
+            }
+            40% { 
+                transform: scale(1.2); 
+                opacity: 1; 
+            }
         }
 
         .chat-input-container {
             background: var(--bg-secondary);
-            padding: 20px;
+            padding: 24px;
             border-top: 2px solid var(--border-color);
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
         }
 
         .chat-input-wrapper {
             display: flex;
-            gap: 12px;
+            gap: 16px;
             align-items: flex-end;
         }
 
         .input-container {
             flex: 1;
+            position: relative;
+        }
+
+        .input-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .length-selector {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 4px 8px;
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .length-selector:focus {
+            outline: none;
+            border-color: var(--claude-orange);
+        }
+
+        .char-counter {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
         }
 
         .chat-input {
             width: 100%;
             background: var(--bg-primary);
             border: 2px solid var(--border-color);
-            border-radius: 16px;
-            padding: 16px 20px;
+            border-radius: 20px;
+            padding: 18px 24px;
             color: var(--text-primary);
             font-size: 15px;
             font-weight: 500;
             outline: none;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             resize: none;
-            min-height: 50px;
-            max-height: 200px;
+            min-height: 56px;
+            max-height: 300px;
             font-family: inherit;
+            line-height: 1.5;
         }
 
         .chat-input:focus {
             border-color: var(--claude-orange);
-            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+            box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.1);
+            transform: translateY(-2px);
         }
 
         .chat-input::placeholder {
@@ -288,129 +431,207 @@
         }
 
         .send-button {
-            background: linear-gradient(135deg, var(--claude-orange), #F59E0B);
+            background: linear-gradient(135deg, var(--claude-orange), var(--claude-orange-light));
             border: none;
-            border-radius: 12px;
-            width: 48px;
-            height: 48px;
+            border-radius: 16px;
+            width: 56px;
+            height: 56px;
             color: white;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+            box-shadow: 0 4px 16px rgba(217, 119, 6, 0.4);
+            position: relative;
+            overflow: hidden;
         }
 
         .send-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(217, 119, 6, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(217, 119, 6, 0.5);
         }
 
         .send-button:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
         }
 
         .send-button:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
+        }
+
+        .send-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .send-button:hover::before {
+            left: 100%;
         }
 
         .error-message {
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.3);
             color: #FCA5A5;
-            padding: 12px 16px;
+            padding: 16px 20px;
             border-radius: 12px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .welcome-message {
             text-align: center;
-            padding: 40px 20px;
-            opacity: 0.7;
+            padding: 60px 20px;
+            opacity: 0.8;
         }
 
         .welcome-message h2 {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--claude-orange);
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
 
         .welcome-message p {
             color: var(--text-secondary);
-            font-size: 14px;
-            line-height: 1.5;
+            font-size: 16px;
+            line-height: 1.6;
+            max-width: 500px;
+            margin: 0 auto;
         }
 
-        .continue-button {
-            background: rgba(217, 119, 6, 0.1);
-            border: 1px solid rgba(217, 119, 6, 0.3);
-            border-radius: 8px;
-            padding: 8px 16px;
-            color: var(--claude-orange);
-            font-weight: 600;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 10px;
+        .loading-progress {
+            width: 100%;
+            height: 3px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
         }
 
-        .continue-button:hover {
-            background: rgba(217, 119, 6, 0.2);
+        .loading-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--claude-orange), var(--claude-orange-light));
+            border-radius: 2px;
+            transition: width 0.3s ease;
         }
 
+        /* Responsive design */
         @media (max-width: 768px) {
-            .chat-messages { padding: 15px; }
-            .chat-input-container { padding: 15px; }
-            .chat-header { padding: 10px 15px; }
-            .message-bubble { max-width: 95%; min-width: auto; }
+            .chat-messages { 
+                padding: 16px; 
+            }
+            .chat-input-container { 
+                padding: 16px; 
+            }
+            .chat-header { 
+                padding: 12px 16px; 
+            }
+            .message-bubble { 
+                max-width: 95%; 
+                min-width: auto; 
+            }
+            .chat-header h1 {
+                font-size: 18px;
+            }
+            .token-counter {
+                display: none;
+            }
+        }
+
+        /* Dark scrollbar for webkit browsers */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--claude-orange) var(--bg-tertiary);
+        }
+
+        *::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background: var(--claude-orange);
+            border-radius: 4px;
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+            background: var(--claude-orange-light);
         }
     </style>
 </head>
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            <h1>Enhanced Claude Chat</h1>
-            <div class="header-buttons">
-                <button class="header-button" onclick="toggleLongMode()">Long Mode: OFF</button>
-                <button class="header-button" onclick="clearChat()">Clear</button>
+            <h1>
+                <div class="status-indicator"></div>
+                Claude Sonnet 4 - Enhanced
+            </h1>
+            <div class="header-controls">
+                <div class="token-counter" id="tokenCounter">Tokens: 0</div>
+                <button class="clear-button" onclick="clearChat()">Clear Chat</button>
             </div>
         </div>
         
         <div class="chat-messages" id="chatMessages">
             <div class="welcome-message">
-                <h2>Welcome to Enhanced Claude!</h2>
-                <p>Now with code block support and extended responses. Toggle "Long Mode" for handling very long code outputs.</p>
+                <h2>Enhanced Claude Interface</h2>
+                <p>Optimized for long-form responses including extensive code generation, detailed analyses, and comprehensive documentation. Ready to handle responses of 1000+ lines with improved formatting and performance.</p>
             </div>
         </div>
         
         <div class="typing-indicator" id="typingIndicator">
-            <span>Claude is thinking</span>
+            <span>Claude is generating response</span>
             <div class="typing-dots">
                 <div class="typing-dot"></div>
                 <div class="typing-dot"></div>
                 <div class="typing-dot"></div>
+            </div>
+            <div class="loading-progress">
+                <div class="loading-bar" id="loadingBar"></div>
             </div>
         </div>
         
         <div class="chat-input-container">
             <div class="chat-input-wrapper">
                 <div class="input-container">
+                    <div class="input-controls">
+                        <select class="length-selector" id="responseLength">
+                            <option value="standard">Standard Response</option>
+                            <option value="detailed">Detailed Response</option>
+                            <option value="comprehensive">Comprehensive Response</option>
+                            <option value="extensive" selected>Extensive Response (1000+ lines)</option>
+                        </select>
+                        <div class="char-counter" id="charCounter">0 characters</div>
+                    </div>
                     <textarea 
                         class="chat-input" 
                         id="chatInput" 
-                        placeholder="Type your message here... (Shift+Enter for new line)"
+                        placeholder="Ask for detailed code, comprehensive analysis, or extensive documentation... (Shift+Enter for new line)"
                         rows="1"
                         onkeydown="handleKeyPress(event)"
-                        oninput="autoResize(this)"
+                        oninput="autoResize(this); updateCharCounter()"
                     ></textarea>
                 </div>
                 <button class="send-button" id="sendButton" onclick="sendMessage()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M3.4 20.4l17.45-7.48c.81-.35.81-1.49 0-1.84L3.4 3.6c-.66-.29-1.39.2-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.49-.87.99l.01 4.61c0 .71.73 1.2 1.39.91z"/>
                     </svg>
                 </button>
@@ -420,11 +641,136 @@
 
     <script src="https://js.puter.com/v2/"></script>
     <script>
-        // Global variables
-        let longMode = false;
-        let conversationHistory = [];
         let isLoading = false;
-        let currentMessageId = null;
+        let totalTokens = 0;
+        let conversationHistory = [];
+
+        const responseLengthConfig = {
+            'standard': { maxTokens: 1000, temperature: 0.7 },
+            'detailed': { maxTokens: 2500, temperature: 0.7 },
+            'comprehensive': { maxTokens: 4000, temperature: 0.6 },
+            'extensive': { maxTokens: 8000, temperature: 0.5 }
+        };
+
+        function updateCharCounter() {
+            const input = document.getElementById('chatInput');
+            const counter = document.getElementById('charCounter');
+            const count = input.value.length;
+            counter.textContent = `${count} characters`;
+            
+            if (count > 2000) {
+                counter.style.color = 'var(--warning-color)';
+            } else {
+                counter.style.color = 'var(--text-muted)';
+            }
+        }
+
+        function updateTokenCounter() {
+            const counter = document.getElementById('tokenCounter');
+            counter.textContent = `Tokens: ${totalTokens.toLocaleString()}`;
+        }
+
+        function estimateTokens(text) {
+            // Rough estimation: 1 token ≈ 0.75 words ≈ 4 characters
+            return Math.ceil(text.length / 4);
+        }
+
+        function formatCodeBlocks(text) {
+            // Enhanced code block detection and formatting
+            const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
+            return text.replace(codeBlockRegex, (match, language, code) => {
+                const lang = language || 'text';
+                const lines = code.trim().split('\n').length;
+                const chars = code.trim().length;
+                
+                return `<div class="code-block">
+                    <div class="code-header">
+                        <span class="code-language">${lang.toUpperCase()}</span>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <span>${lines} lines • ${chars} chars</span>
+                            <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                        </div>
+                    </div>
+                    <div class="code-content">${escapeHtml(code.trim())}</div>
+                </div>`;
+            });
+        }
+
+        function copyCode(button) {
+            const codeContent = button.closest('.code-block').querySelector('.code-content');
+            const text = codeContent.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.style.background = 'var(--success-color)';
+                button.style.borderColor = 'var(--success-color)';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = 'none';
+                    button.style.borderColor = 'var(--border-color)';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy code:', err);
+                button.textContent = 'Failed';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        }
+
+        function addMessage(content, isUser = false, tokenCount = 0) {
+            const chatMessages = document.getElementById('chatMessages');
+            const welcomeMessage = chatMessages.querySelector('.welcome-message');
+            if (welcomeMessage) welcomeMessage.remove();
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'claude-message'}`;
+            
+            let processedContent = content;
+            let responseStats = '';
+            
+            if (!isUser) {
+                // Process code blocks and other formatting
+                processedContent = formatCodeBlocks(content);
+                
+                // Add response statistics for long responses
+                const lines = content.split('\n').length;
+                const words = content.split(/\s+/).length;
+                const chars = content.length;
+                
+                if (chars > 2000) {
+                    responseStats = `<div class="response-stats">${lines} lines • ${words} words</div>`;
+                }
+                
+                // Add scrollable container for very long responses
+                if (chars > 5000) {
+                    processedContent = `<div class="long-response">${processedContent}</div>`;
+                }
+            } else {
+                processedContent = escapeHtml(content);
+            }
+            
+            processedContent = processedContent.replace(/\n/g, '<br>');
+            
+            messageDiv.innerHTML = `
+                <div class="message-bubble">
+                    ${responseStats}
+                    <div class="message-label">${isUser ? 'You' : 'Claude'}</div>
+                    <div class="message-content">${processedContent}</div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Update token counter
+            if (tokenCount > 0) {
+                totalTokens += tokenCount;
+                updateTokenCounter();
+            }
+        }
 
         function escapeHtml(text) {
             const div = document.createElement('div');
@@ -432,230 +778,160 @@
             return div.innerHTML;
         }
 
-        function toggleLongMode() {
-            longMode = !longMode;
-            const button = document.querySelector('.header-button');
-            button.textContent = `Long Mode: ${longMode ? 'ON' : 'OFF'}`;
-            button.style.background = longMode ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.2)';
-        }
-
-        function detectCodeBlocks(text) {
-            // Enhanced code block detection
-            const codeBlockRegex = /```(\w+)?\s*\n?([\s\S]*?)```/g;
-            const inlineCodeRegex = /`([^`\n]+)`/g;
-            
-            let processedText = text;
-            const matches = [];
-            let match;
-            
-            // Collect all matches first to avoid regex issues
-            while ((match = codeBlockRegex.exec(text)) !== null) {
-                matches.push({
-                    full: match[0],
-                    language: match[1] || 'text',
-                    code: match[2].trim()
-                });
-            }
-            
-            // Process code blocks in reverse order to maintain string positions
-            for (let i = matches.length - 1; i >= 0; i--) {
-                const { full, language, code } = matches[i];
-                const codeBlock = `<div class="code-block">
-                    <div class="code-header">
-                        <span class="code-language">${language}</span>
-                    </div>
-                    <div class="code-content">${escapeHtml(code)}</div>
-                </div>`;
-                
-                processedText = processedText.replace(full, codeBlock);
-            }
-            
-            // Process inline code (avoid processing inside code blocks)
-            if (!processedText.includes('<div class="code-block">')) {
-                processedText = processedText.replace(inlineCodeRegex, '<code style="background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-family: \'JetBrains Mono\', monospace; font-size: 0.9em; color: var(--text-primary);">$1</code>');
-            }
-            
-            return processedText;
-        }
-
-        function addMessage(content, isUser = false, messageId = null) {
-            const chatMessages = document.getElementById('chatMessages');
-            const welcomeMessage = chatMessages.querySelector('.welcome-message');
-            if (welcomeMessage) welcomeMessage.remove();
-
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'claude-message'}`;
-            if (messageId) messageDiv.id = messageId;
-            
-            let processedContent;
-            if (isUser) {
-                processedContent = escapeHtml(content).replace(/\n/g, '<br>');
-            } else {
-                processedContent = detectCodeBlocks(content);
-                // Don't replace newlines with <br> inside code blocks
-                if (!processedContent.includes('<div class="code-block">')) {
-                    processedContent = processedContent.replace(/\n/g, '<br>');
-                }
-            }
-            
-            messageDiv.innerHTML = `
-                <div class="message-bubble">
-                    <div class="message-label">${isUser ? 'You' : 'Claude'}</div>
-                    <div class="message-content">${processedContent}</div>
-                </div>
-            `;
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            return messageDiv;
-        }
-
-        function updateMessage(messageId, content) {
-            const messageDiv = document.getElementById(messageId);
-            if (messageDiv) {
-                const contentDiv = messageDiv.querySelector('.message-content');
-                let processedContent = detectCodeBlocks(content);
-                // Don't replace newlines with <br> inside code blocks
-                if (!processedContent.includes('<div class="code-block">')) {
-                    processedContent = processedContent.replace(/\n/g, '<br>');
-                }
-                contentDiv.innerHTML = processedContent;
-                
-                const chatMessages = document.getElementById('chatMessages');
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        }
-
-        function addContinueButton(messageId) {
-            const messageDiv = document.getElementById(messageId);
-            if (messageDiv) {
-                const contentDiv = messageDiv.querySelector('.message-content');
-                const continueButton = document.createElement('button');
-                continueButton.className = 'continue-button';
-                continueButton.textContent = 'Continue Response';
-                continueButton.onclick = () => continueResponse(messageId);
-                contentDiv.appendChild(continueButton);
-            }
-        }
-
-        async function continueResponse(messageId) {
-            const button = document.querySelector(`#${messageId} .continue-button`);
-            if (button) button.remove();
-            
-            isLoading = true;
-            document.getElementById('sendButton').disabled = true;
-            showTypingIndicator();
-            
-            try {
-                const chat_resp = await puter.ai.chat('Please continue from where you left off.', {
-                    model: 'claude-sonnet-4',
-                    stream: true,
-                    max_tokens: longMode ? 8000 : 4000,
-                    temperature: 0.7,
-                    context: conversationHistory
-                });
-                
-                hideTypingIndicator();
-                
-                let fullResponse = '';
-                const messageDiv = document.getElementById(messageId);
-                const contentDiv = messageDiv.querySelector('.message-content');
-                const currentContent = contentDiv.textContent;
-                
-                for await (const part of chat_resp) {
-                    if (part?.text) {
-                        fullResponse += part.text;
-                        updateMessage(messageId, currentContent + fullResponse);
-                    }
-                }
-                
-                // Update conversation history
-                const lastEntry = conversationHistory[conversationHistory.length - 1];
-                if (lastEntry && lastEntry.role === 'assistant') {
-                    lastEntry.content += fullResponse;
-                }
-                
-            } catch (error) {
-                hideTypingIndicator();
-                showError(error.message || 'Failed to continue response.');
-                console.error('Continue error:', error);
-            } finally {
-                isLoading = false;
-                document.getElementById('sendButton').disabled = false;
-            }
-        }
-
         function showTypingIndicator() {
-            document.getElementById('typingIndicator').style.display = 'flex';
+            const indicator = document.getElementById('typingIndicator');
+            const loadingBar = document.getElementById('loadingBar');
+            indicator.style.display = 'flex';
+            
+            // Simulate loading progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                loadingBar.style.width = progress + '%';
+            }, 500);
+            
+            indicator.progressInterval = interval;
             document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
         }
 
         function hideTypingIndicator() {
-            document.getElementById('typingIndicator').style.display = 'none';
+            const indicator = document.getElementById('typingIndicator');
+            const loadingBar = document.getElementById('loadingBar');
+            
+            if (indicator.progressInterval) {
+                clearInterval(indicator.progressInterval);
+            }
+            
+            loadingBar.style.width = '100%';
+            setTimeout(() => {
+                indicator.style.display = 'none';
+                loadingBar.style.width = '0%';
+            }, 300);
         }
 
         function showError(message) {
             const chatMessages = document.getElementById('chatMessages');
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
-            errorDiv.innerHTML = `<strong>Error:</strong> ${message}`;
+            errorDiv.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+                <strong>Error:</strong> ${message}
+            `;
             chatMessages.appendChild(errorDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
         function autoResize(textarea) {
             textarea.style.height = 'auto';
-            textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+            textarea.style.height = Math.min(textarea.scrollHeight, 300) + 'px';
+        }
+
+        function buildEnhancedPrompt(message, responseLength) {
+            const lengthInstructions = {
+                'standard': '',
+                'detailed': 'Please provide a detailed and comprehensive response.',
+                'comprehensive': 'Please provide a very comprehensive and thorough response with extensive detail, examples, and explanations.',
+                'extensive': 'Please provide an extremely detailed, comprehensive response. Include extensive code examples, detailed explanations, multiple approaches, best practices, and thorough documentation. Aim for a response that could be 1000+ lines if it involves code generation or detailed technical content.'
+            };
+
+            const instruction = lengthInstructions[responseLength];
+            return instruction ? `${instruction}\n\n${message}` : message;
         }
 
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const sendButton = document.getElementById('sendButton');
+            const responseLength = document.getElementById('responseLength').value;
             const message = input.value.trim();
             
             if (!message || isLoading) return;
             
-            // Add to conversation history
+            const enhancedMessage = buildEnhancedPrompt(message, responseLength);
+            const estimatedInputTokens = estimateTokens(message);
+            
+            addMessage(message, true, estimatedInputTokens);
             conversationHistory.push({ role: 'user', content: message });
             
-            addMessage(message, true);
             input.value = '';
             input.style.height = 'auto';
+            updateCharCounter();
             
             isLoading = true;
             sendButton.disabled = true;
             showTypingIndicator();
             
             try {
-                // Generate unique message ID
-                currentMessageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                
-                const chat_resp = await puter.ai.chat(message, {
-                    model: 'claude-sonnet-4',
-                    stream: true,
-                    max_tokens: longMode ? 8000 : 4000,
-                    temperature: 0.7,
-                    context: conversationHistory.slice(-10) // Keep last 10 messages for context
-                });
+                const chatMessages = document.getElementById('chatMessages');
+                const responseDiv = document.createElement('div');
+                responseDiv.className = 'message claude-message';
                 
                 hideTypingIndicator();
-                addMessage('', false, currentMessageId);
+                chatMessages.appendChild(responseDiv);
                 
                 let fullResponse = '';
+                let isFirstChunk = true;
+                
+                const config = responseLengthConfig[responseLength];
+                
+                // Enhanced API call with conversation history and extended limits
+                const chat_resp = await puter.ai.chat(enhancedMessage, {
+                    model: 'claude-sonnet-4',
+                    stream: true,
+                    max_tokens: config.maxTokens,
+                    temperature: config.temperature,
+                    conversation_history: conversationHistory.slice(-10) // Keep last 10 exchanges
+                });
                 
                 for await (const part of chat_resp) {
                     if (part?.text) {
                         fullResponse += part.text;
-                        updateMessage(currentMessageId, fullResponse);
+                        
+                        if (isFirstChunk) {
+                            responseDiv.innerHTML = `
+                                <div class="message-bubble">
+                                    <div class="message-label">Claude</div>
+                                    <div class="message-content" id="currentResponse"></div>
+                                </div>
+                            `;
+                            isFirstChunk = false;
+                        }
+                        
+                        const currentResponse = document.getElementById('currentResponse');
+                        if (currentResponse) {
+                            // Process and display the response with enhanced formatting
+                            let processedResponse = formatCodeBlocks(fullResponse);
+                            processedResponse = processedResponse.replace(/\n/g, '<br>');
+                            currentResponse.innerHTML = processedResponse;
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }
                     }
                 }
                 
-                // Add to conversation history
-                conversationHistory.push({ role: 'assistant', content: fullResponse });
-                
-                // If response seems truncated and long mode is on, add continue button
-                if (longMode && (fullResponse.length > 3000 || fullResponse.endsWith('...'))) {
-                    addContinueButton(currentMessageId);
+                // Finalize the response
+                const finalResponse = document.getElementById('currentResponse');
+                if (finalResponse) {
+                    finalResponse.removeAttribute('id');
+                    
+                    // Add response statistics for long responses
+                    const lines = fullResponse.split('\n').length;
+                    const words = fullResponse.split(/\s+/).length;
+                    const chars = fullResponse.length;
+                    const estimatedTokens = estimateTokens(fullResponse);
+                    
+                    if (chars > 2000) {
+                        const statsDiv = document.createElement('div');
+                        statsDiv.className = 'response-stats';
+                        statsDiv.textContent = `${lines} lines • ${words} words • ~${estimatedTokens} tokens`;
+                        responseDiv.querySelector('.message-bubble').appendChild(statsDiv);
+                    }
+                    
+                    // Add to conversation history
+                    conversationHistory.push({ role: 'assistant', content: fullResponse });
+                    totalTokens += estimatedTokens;
+                    updateTokenCounter();
                 }
                 
             } catch (error) {
@@ -676,22 +952,130 @@
             }
         }
 
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 300) + 'px';
+        }
+
         function clearChat() {
             conversationHistory = [];
+            totalTokens = 0;
+            updateTokenCounter();
+            
             document.getElementById('chatMessages').innerHTML = `
                 <div class="welcome-message">
-                    <h2>Welcome to Enhanced Claude!</h2>
-                    <p>Now with code block support and extended responses. Toggle "Long Mode" for handling very long code outputs.</p>
+                    <h2>Enhanced Claude Interface</h2>
+                    <p>Optimized for long-form responses including extensive code generation, detailed analyses, and comprehensive documentation. Ready to handle responses of 1000+ lines with improved formatting and performance.</p>
                 </div>
             `;
         }
 
+        // Initialize the application
         window.addEventListener('load', () => {
             const input = document.getElementById('chatInput');
             input.focus();
+            updateCharCounter();
+            updateTokenCounter();
+            
+            // Add event listeners
             input.addEventListener('input', function() {
                 autoResize(this);
+                updateCharCounter();
             });
+            
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case 'k':
+                            e.preventDefault();
+                            clearChat();
+                            break;
+                        case 'l':
+                            e.preventDefault();
+                            input.focus();
+                            break;
+                    }
+                }
+            });
+            
+            // Add response length change handler
+            document.getElementById('responseLength').addEventListener('change', function() {
+                const descriptions = {
+                    'standard': 'Standard responses for quick questions',
+                    'detailed': 'Detailed responses with more context',
+                    'comprehensive': 'Comprehensive responses with extensive detail',
+                    'extensive': 'Extensive responses optimized for code generation and detailed analysis'
+                };
+                
+                const placeholder = `Ask for ${this.value} content - ${descriptions[this.value]}... (Shift+Enter for new line)`;
+                input.placeholder = placeholder;
+            });
+            
+            // Trigger initial placeholder update
+            document.getElementById('responseLength').dispatchEvent(new Event('change'));
+        });
+
+        // Add utility functions for enhanced features
+        function downloadResponse(content, filename = 'claude_response.txt') {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportChat() {
+            const messages = document.querySelectorAll('.message');
+            let chatText = 'Claude Chat Export\n';
+            chatText += '='.repeat(50) + '\n\n';
+            
+            messages.forEach(message => {
+                const isUser = message.classList.contains('user-message');
+                const content = message.querySelector('.message-content').textContent;
+                chatText += `${isUser ? 'User' : 'Claude'}:\n${content}\n\n`;
+                chatText += '-'.repeat(30) + '\n\n';
+            });
+            
+            downloadResponse(chatText, 'claude_chat_export.txt');
+        }
+
+        // Add context menu for enhanced features
+        document.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('.message-content') && !e.target.closest('.user-message')) {
+                e.preventDefault();
+                const content = e.target.closest('.message-content').textContent;
+                
+                const menu = document.createElement('div');
+                menu.style.cssText = `
+                    position: fixed;
+                    top: ${e.clientY}px;
+                    left: ${e.clientX}px;
+                    background: var(--bg-tertiary);
+                    border: 1px solid var(--border-color);
+                    border-radius: 8px;
+                    padding: 8px 0;
+                    z-index: 1000;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                `;
+                
+                menu.innerHTML = `
+                    <div style="padding: 8px 16px; cursor: pointer; color: var(--text-primary);" onclick="navigator.clipboard.writeText('${content.replace(/'/g, "\\'")}'); this.parentElement.remove();">Copy Response</div>
+                    <div style="padding: 8px 16px; cursor: pointer; color: var(--text-primary);" onclick="downloadResponse('${content.replace(/'/g, "\\'")}'); this.parentElement.remove();">Download Response</div>
+                `;
+                
+                document.body.appendChild(menu);
+                
+                setTimeout(() => {
+                    document.addEventListener('click', () => {
+                        if (menu.parentElement) menu.remove();
+                    }, { once: true });
+                }, 100);
+            }
         });
     </script>
 </body>
