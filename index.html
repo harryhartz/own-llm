@@ -146,6 +146,8 @@
             word-wrap: break-word;
             overflow-wrap: break-word;
             font-family: 'Inter', sans-serif;
+            max-height: none;
+            overflow: visible;
         }
 
         .claude-message .message-content {
@@ -202,7 +204,9 @@
             line-height: 1.5;
             color: var(--text-primary);
             overflow-x: auto;
-            white-space: pre;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-width: 100%;
         }
 
         .typing-indicator {
@@ -437,17 +441,25 @@
 
         function detectCodeBlocks(text) {
             // Enhanced code block detection
-            const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
-            const inlineCodeRegex = /`([^`]+)`/g;
+            const codeBlockRegex = /```(\w+)?\s*\n?([\s\S]*?)```/g;
+            const inlineCodeRegex = /`([^`\n]+)`/g;
             
             let processedText = text;
+            const matches = [];
             let match;
             
-            // Process code blocks
+            // Collect all matches first to avoid regex issues
             while ((match = codeBlockRegex.exec(text)) !== null) {
-                const language = match[1] || 'text';
-                const code = match[2].trim();
-                
+                matches.push({
+                    full: match[0],
+                    language: match[1] || 'text',
+                    code: match[2].trim()
+                });
+            }
+            
+            // Process code blocks in reverse order to maintain string positions
+            for (let i = matches.length - 1; i >= 0; i--) {
+                const { full, language, code } = matches[i];
                 const codeBlock = `<div class="code-block">
                     <div class="code-header">
                         <span class="code-language">${language}</span>
@@ -455,14 +467,13 @@
                     <div class="code-content">${escapeHtml(code)}</div>
                 </div>`;
                 
-                processedText = processedText.replace(match[0], codeBlock);
+                processedText = processedText.replace(full, codeBlock);
             }
             
-            // Reset regex lastIndex
-            codeBlockRegex.lastIndex = 0;
-            
-            // Process inline code
-            processedText = processedText.replace(inlineCodeRegex, '<code style="background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-family: \'JetBrains Mono\', monospace; font-size: 0.9em;">$1</code>');
+            // Process inline code (avoid processing inside code blocks)
+            if (!processedText.includes('<div class="code-block">')) {
+                processedText = processedText.replace(inlineCodeRegex, '<code style="background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-family: \'JetBrains Mono\', monospace; font-size: 0.9em; color: var(--text-primary);">$1</code>');
+            }
             
             return processedText;
         }
@@ -481,7 +492,10 @@
                 processedContent = escapeHtml(content).replace(/\n/g, '<br>');
             } else {
                 processedContent = detectCodeBlocks(content);
-                processedContent = processedContent.replace(/\n/g, '<br>');
+                // Don't replace newlines with <br> inside code blocks
+                if (!processedContent.includes('<div class="code-block">')) {
+                    processedContent = processedContent.replace(/\n/g, '<br>');
+                }
             }
             
             messageDiv.innerHTML = `
@@ -501,7 +515,10 @@
             if (messageDiv) {
                 const contentDiv = messageDiv.querySelector('.message-content');
                 let processedContent = detectCodeBlocks(content);
-                processedContent = processedContent.replace(/\n/g, '<br>');
+                // Don't replace newlines with <br> inside code blocks
+                if (!processedContent.includes('<div class="code-block">')) {
+                    processedContent = processedContent.replace(/\n/g, '<br>');
+                }
                 contentDiv.innerHTML = processedContent;
                 
                 const chatMessages = document.getElementById('chatMessages');
