@@ -134,16 +134,11 @@
             color: var(--claude-orange);
         }
 
-        .user-message .message-content {
-            background: linear-gradient(135deg, var(--claude-orange), #F59E0B);
-            color: white;
-            padding: 16px 20px;
-            border-radius: 18px 18px 6px 18px;
-            font-weight: 500;
-            line-height: 1.5;
-            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+        .message-content {
             white-space: pre-wrap;
             word-wrap: break-word;
+            overflow-wrap: break-word;
+            font-family: 'Inter', monospace;
         }
 
         .claude-message .message-content {
@@ -155,8 +150,16 @@
             line-height: 1.6;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             border-left: 3px solid var(--claude-orange);
-            white-space: pre-wrap;
-            word-wrap: break-word;
+        }
+
+        .user-message .message-content {
+            background: linear-gradient(135deg, var(--claude-orange), #F59E0B);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 18px 18px 6px 18px;
+            font-weight: 500;
+            line-height: 1.5;
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
         }
 
         .typing-indicator {
@@ -359,14 +362,24 @@
 
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user-message' : 'claude-message'}`;
+            
+            // Escape HTML content and preserve line breaks
+            const escapedContent = escapeHtml(content).replace(/\n/g, '<br>');
+            
             messageDiv.innerHTML = `
                 <div class="message-bubble">
                     <div class="message-label">${isUser ? 'You' : 'Claude'}</div>
-                    <div class="message-content">${content}</div>
+                    <div class="message-content">${escapedContent}</div>
                 </div>
             `;
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         function showTypingIndicator() {
@@ -435,7 +448,8 @@
                 for await (const part of chat_resp) {
                     if (part?.text) {
                         fullResponse += part.text;
-                        currentResponse.textContent = fullResponse;
+                        // Escape HTML and preserve formatting
+                        currentResponse.innerHTML = escapeHtml(fullResponse).replace(/\n/g, '<br>');
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                     }
                 }
